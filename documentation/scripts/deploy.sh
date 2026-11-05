@@ -19,6 +19,11 @@ if [ -z "$DB_PRIVATE_IP" ]; then
   exit 1
 fi
 
+if [ -z "${POSTGRES_PASSWORD:-}" ]; then
+  echo "FEHLER: Umgebungsvariable POSTGRES_PASSWORD ist nicht gesetzt (z.B. via GitHub Secrets)!"
+  exit 1
+fi
+
 echo "-> DB Private IP : $DB_PRIVATE_IP"
 echo "-> App Public IP : ${APP_PUBLIC_IP:-Keine}"
 
@@ -37,12 +42,12 @@ az vm run-command invoke \
     systemctl enable postgresql
 
     # PostgreSQL Benutzer und Datenbank anlegen falls noch nicht vorhanden
-    sudo -u postgres psql -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"
-    sudo -u postgres psql -tc \"SELECT 1 FROM pg_database WHERE datname = 'learning_journal'\" | grep -q 1 || \
-      sudo -u postgres psql -c \"CREATE DATABASE learning_journal;\"
+    sudo -u postgres psql -c \"ALTER USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';\"
+    sudo -u postgres psql -tc \"SELECT 1 FROM pg_database WHERE datname = '${POSTGRES_DB}'\" | grep -q 1 || \
+      sudo -u postgres psql -c \"CREATE DATABASE ${POSTGRES_DB};\"
 
     # Tabellen initialisieren (database_setup.sql)
-    sudo -u postgres psql -d learning_journal -c \"
+    sudo -u postgres psql -d ${POSTGRES_DB} -c \"
       CREATE TABLE IF NOT EXISTS entries (
           id VARCHAR PRIMARY KEY,
           data JSONB NOT NULL,
@@ -82,13 +87,18 @@ az vm run-command invoke \
     apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-pip python3-venv git curl iptables iptables-persistent || true
 
-    echo '=== 2. Repository klonen / aktualisieren ==='
-    if [ ! -d '/opt/learningsteps' ]; then
-      git clone -b reference https://github.com/CyberstepsDE/learningsteps.git /opt/learningsteps
+    echo '=== 2. Repository klonen / aktualisieren (mit Unterordner-Verankerung) ==='
+    if [ ! -d '/opt/ad-learning' ]; then
+      git clone -b ${REPO_BRANCH} ${REPO_URL} /opt/ad-learning
     else
-      cd /opt/learningsteps && git fetch && git checkout reference && git pull origin reference || true
+      cd /opt/ad-learning && git fetch && git checkout ${REPO_BRANCH} && git pull origin ${REPO_BRANCH} || true
     fi
 
+    # Unterordner verankern: Falls alter Klon existiert, ersetzen durch Symlink auf Unterordner
+    if [ -d '/opt/learningsteps' ] && [ ! -L '/opt/learningsteps' ]; then
+      rm -rf /opt/learningsteps
+    fi
+    ln -sfn /opt/ad-learning/${REPO_SUBDIR} /opt/learningsteps
     cd /opt/learningsteps
 
     echo '=== 3. Python Virtualenv & Dependencies ==='
@@ -100,10 +110,10 @@ az vm run-command invoke \
 
     echo '=== 4. .env Datei erzeugen ==='
     cat <<EOF > /opt/learningsteps/.env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=learning_journal
-DATABASE_URL=postgresql://postgres:postgres@${DB_PRIVATE_IP}:5432/learning_journal
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_PRIVATE_IP}:5432/${POSTGRES_DB}
 EOF
 
     echo '=== 5. Portweiterleitung (80 -> 8000) einrichten ==='
