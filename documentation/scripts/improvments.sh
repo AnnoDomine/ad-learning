@@ -5,7 +5,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/params.sh"
 
-ALERT_EMAIL="seel.dominic@googlemail.com"
+if [ -z "${ALERT_EMAIL:-}" ]; then
+  echo "FEHLER: Umgebungsvariable ALERT_EMAIL ist nicht gesetzt (z.B. via GitHub Secrets)!"
+  exit 1
+fi
 
 echo "=========================================================="
 echo "   Improvements: WAF, Monitoring & Cost Control Setup"
