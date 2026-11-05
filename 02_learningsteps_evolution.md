@@ -83,6 +83,8 @@ You will build a fully automated pipeline that manages the entire lifecycle of L
 - **Push Stage**: Authenticate with Azure and push the verified image to ACR.
 - **Deploy Stage**: Update the AKS cluster to pull the latest image and restart the deployment.
 
+> Note from Student: Beside the requested CI/CD Pipeline, I will follow the project with the "best practises" and splitt the pipelines into multiple logic splitted parts which have a constructive trigger and not run on `every push`
+
 5 **Kubernetes Orchestration**
 
 > Deploy LearningSteps to AKS to ensure high availability and scalability.
