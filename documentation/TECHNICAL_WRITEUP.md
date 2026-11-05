@@ -4,7 +4,7 @@
 *Resource Group:* `learningsteps-lab-rg`  
 *Region:* `germanywestcentral`  
 *Generiert am:* `26.10.2026 09:31:54`  
-*Subscription:* `Dominic Sebastian Seel - Sub` (`19796cc1-92ef-4917-afdf-6dd28d25f487`)
+*Subscription:* `Dominic Sebastian Seel - Sub` (`<azure-aub-id>`)
 
 ---
 
@@ -28,7 +28,7 @@ flowchart TD
             subgraph AppSN ["Subnet: app-sn (10.0.1.0/24)"]
                 NSG_App["NSG: app-nsg\n(Erlaubt Port 80 Inbound)"]
                 WAF["Host-WAF (Nginx + ModSecurity)\nRate Limiting & Security Headers"]
-                AppVM["FastAPI Server (app-vm)\nPublic IP: 4.184.212.248\nPrivate IP: 10.0.1.4"]
+                AppVM["FastAPI Server (app-vm)\nPublic IP: {IP}\nPrivate IP: 10.0.1.4"]
             end
 
             subgraph DBSN ["Subnet: db-sn (10.0.2.0/24)"]
@@ -61,13 +61,13 @@ flowchart TD
 
 | Komponente | VM-Name | Private IP | Public IP | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tier 1 (App Server)** | `app-vm` | `10.0.1.4` | `4.184.212.248` | Betriebsbereit (Port 80) |
+| **Tier 1 (App Server)** | `app-vm` | `10.0.1.4` | `{IP}` | Betriebsbereit (Port 80) |
 | **Tier 2 (Datenbank)** | `db-vm` | `10.0.2.4` | *Keine (Isoliert)* | Betriebsbereit (Port 5432) |
 | **Management** | `bastion-host` | Intern | `bastion-pip` | Standard SKU mit Native Tunneling |
 
 ### API Endpunkte & Live-Test
 
-- **Swagger UI**: [http://4.184.212.248/docs](http://4.184.212.248/docs) -> **200 OK (Erreichbar)**
+- **Swagger UI**: [http://{IP}/docs](http://{IP}/docs) -> **200 OK (Erreichbar)**
 - **GET /entries Live-Response**:
 
 ```json

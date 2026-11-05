@@ -25,7 +25,7 @@ Ziel des Projekts war die Überführung der lokalen FastAPI-Applikation **Learni
 
 | Kriterium | Vorgabe (project.md) | Umgesetzte Lösung | Status |
 | :--- | :--- | :--- | :---: |
-| **Öffentlicher Zugriff** | API muss über Public IP oder Domain erreichbar sein. | Public IP `4.184.212.248` eingerichtet; Swagger UI unter `http://4.184.212.248/docs` erreichbar. | ✅ |
+| **Öffentlicher Zugriff** | API muss über Public IP oder Domain erreichbar sein. | Public IP `{IP}}` eingerichtet; Swagger UI unter `http://{IP}}/docs` erreichbar. | ✅ |
 | **Datenbank-Isolation** | DB darf keinesfalls direkt aus dem Internet erreichbar sein. | `db-vm` besitzt keine Public IP; Internet-Probes schlagen fehl; Zugriff von `app-vm` (Port 5432) funktioniert. | ✅ |
 | **CRUD-Funktionalität** | Alle Endpunkte (Erstellen, Lesen, Aktualisieren, Löschen) müssen funktionieren. | Offizielle Testsuite `test_api.py` und manuelle API-Tests gegen Public IP ausgeführt: **100 % Erfolgsquote**. | ✅ |
 | **Datenpersistenz** | Daten müssen Neustarts und Redeployments überdauern. | PostgreSQL läuft auf dedizierter VM mit Managed OS-Disk (`entries`-Tabelle mit GIN-Index). | ✅ |
@@ -61,7 +61,7 @@ Zur Kostenoptimierung und Vermeidung unnötiger Cloud-Gebühren wurden dediziert
   - **Storage-Kosten**: OS-Disks werden temporär auf die günstigste Storage-Klasse (`Standard_LRS`) herabgestuft (über 60 % Ersparnis).
 - **Arbeitsmodus (`start_vms.sh`)**:
   - Reaktiviert Hochleistungsdisks (`Premium_LRS`).
-  - Fährt die VMs hoch (statische Public IP `4.184.212.248` bleibt erhalten).
+  - Fährt die VMs hoch (statische Public IP `{IP}}` bleibt erhalten).
   - Stellt den Bastion Host bei Bedarf im Hintergrund (`--no-wait`) wieder her.
 
 ---
