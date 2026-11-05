@@ -4,6 +4,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/params.sh"
 
+az rg create \
+  --name $RG \
+  --location $REGION
+
 az acr create \
   --resource-group $RG \
   --name $ACR \
