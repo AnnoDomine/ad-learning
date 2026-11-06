@@ -1,0 +1,350 @@
+
+Report Summary
+
+┌─────────┬───────────┬───────────────────┐
+│ Target  │   Type    │ Misconfigurations │
+├─────────┼───────────┼───────────────────┤
+│ .       │ terraform │         0         │
+├─────────┼───────────┼───────────────────┤
+│ main.tf │ terraform │        15         │
+└─────────┴───────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+main.tf (terraform)
+===================
+Tests: 15 (SUCCESSES: 0, FAILURES: 15)
+Failures: 15 (UNKNOWN: 0, LOW: 4, MEDIUM: 7, HIGH: 2, CRITICAL: 2)
+
+AZU-0013 (CRITICAL): Vault network ACL does not block access by default.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.
+
+The default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.
+
+
+See https://avd.aquasec.com/misconfig/azu-0013
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:56-88
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  56 ┌ resource "azurerm_key_vault" "learningsteps_evo_key_vault" {
+  57 │   name                       = var.az_kv
+  58 │   location                   = azurerm_resource_group.learningsteps_evo.location
+  59 │   resource_group_name        = azurerm_resource_group.learningsteps_evo.name
+  60 │   rbac_authorization_enabled = false
+  61 │   tenant_id                  = data.azurerm_client_config.current.tenant_id
+  62 │   sku_name                   = "premium"
+  63 │   soft_delete_retention_days = 7
+  64 └ 
+  ..   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0014 (MEDIUM): Key should have an expiry date specified.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Expiration Date is an optional Key Vault Key behavior and is not set by default.
+
+Set when the resource will be become inactive.
+
+
+See https://avd.aquasec.com/misconfig/azu-0014
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:90-113
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  90 ┌ resource "azurerm_key_vault_key" "generated" {
+  91 │   name         = var.az_kv_cert
+  92 │   key_vault_id = azurerm_key_vault.learningsteps_evo_key_vault.id
+  93 │   key_type     = "RSA"
+  94 │   key_size     = 2048
+  95 │ 
+  96 │   key_opts = [
+  97 │     "decrypt",
+  98 └     "encrypt",
+  ..   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0015 (LOW): Secret does not have a content-type specified.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Content Type is an optional Key Vault Secret behavior and is not enabled by default.
+
+Clients may specify the content type of a secret to assist in interpreting the secret data when it's retrieved. The maximum length of this field is 255 characters. There are no pre-defined values. The suggested usage is as a hint for interpreting the secret data.
+
+
+See https://avd.aquasec.com/misconfig/azu-0015
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:115-119
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 115 ┌ resource "azurerm_key_vault_secret" "db_password" {
+ 116 │   name         = "db-admin-password"
+ 117 │   value        = random_password.password.result
+ 118 │   key_vault_id = azurerm_key_vault.learningsteps_evo_key_vault.id
+ 119 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0016 (MEDIUM): Vault does not have purge protection enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Purge protection is an optional Key Vault behavior and is not enabled by default.
+
+Purge protection can only be enabled once soft-delete is enabled. It can be turned on via CLI or PowerShell.
+
+
+See https://avd.aquasec.com/misconfig/azu-0016
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:56-88
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  56 ┌ resource "azurerm_key_vault" "learningsteps_evo_key_vault" {
+  57 │   name                       = var.az_kv
+  58 │   location                   = azurerm_resource_group.learningsteps_evo.location
+  59 │   resource_group_name        = azurerm_resource_group.learningsteps_evo.name
+  60 │   rbac_authorization_enabled = false
+  61 │   tenant_id                  = data.azurerm_client_config.current.tenant_id
+  62 │   sku_name                   = "premium"
+  63 │   soft_delete_retention_days = 7
+  64 └ 
+  ..   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0017 (LOW): Secret should have an expiry date specified.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Expiration Date is an optional Key Vault Secret behavior and is not set by default.
+
+Set when the resource will be become inactive.
+
+
+See https://avd.aquasec.com/misconfig/azu-0017
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:115-119
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 115 ┌ resource "azurerm_key_vault_secret" "db_password" {
+ 116 │   name         = "db-admin-password"
+ 117 │   value        = random_password.password.result
+ 118 │   key_vault_id = azurerm_key_vault.learningsteps_evo_key_vault.id
+ 119 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0019 (MEDIUM): Database server is not configured to log connections.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Postgresql can generate logs for successful connections to improve visibility for audit and configuration issue resolution.
+
+
+See https://avd.aquasec.com/misconfig/azu-0019
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:146-161
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 146 ┌ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
+ 147 │   name                          = var.az_postgresql_server
+ 148 │   resource_group_name           = azurerm_resource_group.learningsteps_evo.name
+ 149 │   location                      = azurerm_resource_group.learningsteps_evo.location
+ 150 │   version                       = "18"
+ 151 │   delegated_subnet_id           = azurerm_subnet.learningsteps_sn.id
+ 152 │   private_dns_zone_id           = azurerm_private_dns_zone.learningsteps_priv_dns.id
+ 153 │   public_network_access_enabled = false
+ 154 └   administrator_login           = var.az_postgresql_user
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0021 (MEDIUM): Database server is not configured to throttle connections.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Postgresql can generate logs for connection throttling to improve visibility for audit and configuration issue resolution.
+
+
+See https://avd.aquasec.com/misconfig/azu-0021
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:146-161
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 146 ┌ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
+ 147 │   name                          = var.az_postgresql_server
+ 148 │   resource_group_name           = azurerm_resource_group.learningsteps_evo.name
+ 149 │   location                      = azurerm_resource_group.learningsteps_evo.location
+ 150 │   version                       = "18"
+ 151 │   delegated_subnet_id           = azurerm_subnet.learningsteps_sn.id
+ 152 │   private_dns_zone_id           = azurerm_private_dns_zone.learningsteps_priv_dns.id
+ 153 │   public_network_access_enabled = false
+ 154 └   administrator_login           = var.az_postgresql_user
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0024 (MEDIUM): Database server is not configured to log checkpoints.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Postgresql can generate logs for checkpoints to improve visibility for audit and configuration issue resolution.
+
+
+See https://avd.aquasec.com/misconfig/azu-0024
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:146-161
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 146 ┌ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
+ 147 │   name                          = var.az_postgresql_server
+ 148 │   resource_group_name           = azurerm_resource_group.learningsteps_evo.name
+ 149 │   location                      = azurerm_resource_group.learningsteps_evo.location
+ 150 │   version                       = "18"
+ 151 │   delegated_subnet_id           = azurerm_subnet.learningsteps_sn.id
+ 152 │   private_dns_zone_id           = azurerm_private_dns_zone.learningsteps_priv_dns.id
+ 153 │   public_network_access_enabled = false
+ 154 └   administrator_login           = var.az_postgresql_user
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0040 (MEDIUM): Cluster does not have logging enabled via OMS Agent.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Ensure AKS logging to Azure Monitoring is configured for containers to monitor the performance of workloads.
+
+
+See https://avd.aquasec.com/misconfig/azu-0040
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0041 (CRITICAL): Cluster does not limit API access to specific IP addresses.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+The API server is the central way to interact with and manage a cluster. To improve cluster security and minimize attacks, the API server should only be accessible from a limited set of IP address ranges.
+
+
+See https://avd.aquasec.com/misconfig/azu-0041
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0042 (HIGH): RBAC is not enabled on cluster
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Using Kubernetes role-based access control (RBAC), you can grant users, groups, and service accounts access to only the resources they need.
+
+
+See https://avd.aquasec.com/misconfig/azu-0042
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0043 (HIGH): Kubernetes cluster does not have a network policy set.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+The Kubernetes object type NetworkPolicy should be defined to have opportunity allow or block traffic to pods, as in a Kubernetes cluster configured with default settings, all pods can discover and communicate with each other without any restrictions.
+
+
+See https://avd.aquasec.com/misconfig/azu-0043
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0065 (MEDIUM): Cluster does not have private cluster enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+A public AKS API server endpoint increases exposure to unauthorized access or attack. Enable private cluster to ensure the API server endpoint is only accessible from within the virtual network.
+
+
+See https://avd.aquasec.com/misconfig/azu-0065
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0066 (LOW): Cluster does not have Azure Policy add-on enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Azure Kubernetes Service should enable Azure Policy Add-On to enforce compliance and governance policies on the cluster. The add-on extends Gatekeeper v3, an admission controller webhook for Open Policy Agent (OPA).
+
+
+See https://avd.aquasec.com/misconfig/azu-0066
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0067 (LOW): Cluster does not have disk encryption set ID configured.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Azure Kubernetes clusters should define a disk encryption set ID to ensure encrypted storage for OS and data disks. This provides an additional layer of security by encrypting data at rest.
+
+
+See https://avd.aquasec.com/misconfig/azu-0067
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:123-142
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 123 ┌ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
+ 124 │   name                = var.az_aks_cluster
+ 125 │   resource_group_name = azurerm_resource_group.learningsteps_evo.name
+ 126 │   location            = azurerm_resource_group.learningsteps_evo.location
+ 127 │   dns_prefix          = "learningsteps-aks"
+ 128 │ 
+ 129 │   identity {
+ 130 │     type = "SystemAssigned"
+ 131 └   }
+ ...   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+

@@ -1,0 +1,12 @@
+
+Report Summary
+
+┌───────────────────────────────┬───────┬─────────┐
+│            Target             │ Type  │ Secrets │
+├───────────────────────────────┼───────┼─────────┤
+│ learningsteps_rust/Cargo.lock │ cargo │    -    │
+└───────────────────────────────┴───────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
