@@ -1,4 +1,4 @@
-name: Trivy checks
+name: trivy
 
 on:
   push:
