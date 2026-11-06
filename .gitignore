@@ -1,2 +1,6 @@
 az.md
 documentation/scripts.7z
+
+*.tfstate
+*.tfstate.backup
+.terraform/
