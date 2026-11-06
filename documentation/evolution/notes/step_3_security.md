@@ -18,6 +18,15 @@ For documentation and demonstraition reason, the repo starts step 3 without appl
 ├─────────┼───────────┼───────────────────┤
 │ main.tf │ terraform │        15         │
 └─────────┴───────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+main.tf (terraform)
+===================
+Tests: 15 (SUCCESSES: 0, FAILURES: 15)
+Failures: 15 (UNKNOWN: 0, LOW: 4, MEDIUM: 7, HIGH: 2, CRITICAL: 2)
 ```
 
 ```bash
