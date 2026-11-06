@@ -25,7 +25,7 @@ jobs:
           scan-type: "config"
           hide-progress: true
           format: "sarif"
-          output: "trivy-iac.sarif"
+          output: "trivy-scan.sarif"
           severity: "CRITICAL,HIGH"
           exit-code: "1"
 
@@ -33,7 +33,7 @@ jobs:
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: "trivy-iac.sarif"
+          sarif_file: "trivy-scan.sarif"
           category: "terraform-iac"
 
   scan-image:
@@ -55,7 +55,7 @@ jobs:
           hide-progress: true
           image-ref: "learningsteps:test"
           format: "sarif"
-          output: "trivy-image.sarif"
+          output: "trivy-scan.sarif"
           severity: "CRITICAL,HIGH"
           exit-code: "1"
 
@@ -63,7 +63,7 @@ jobs:
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: "trivy-image.sarif"
+          sarif_file: "trivy-scan.sarif"
           category: "docker-image"
 
   scan-fs:
@@ -82,7 +82,7 @@ jobs:
           scan-ref: '.'
           ignore-unfixed: true
           format: "sarif"
-          output: "trivy-fs.sarif"
+          output: "trivy-scan.sarif"
           severity: "CRITICAL"
           scanners: "secret"
           exit-code: "1"
@@ -91,5 +91,5 @@ jobs:
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: "trivy-fs.sarif"
+          sarif_file: "trivy-scan.sarif"
           category: "secrets-fs"
