@@ -1,4 +1,4 @@
-name: Scann secrets
+name: Scan secrets
 
 on:
   push:
