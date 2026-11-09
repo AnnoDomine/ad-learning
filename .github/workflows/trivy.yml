@@ -1,0 +1,133 @@
+name: Scan terraform
+
+on:
+  push:
+    branches: "main"
+
+  pull_request:
+    branches: "main"
+
+  workflow_dispatch:
+
+jobs:
+  scan-terraform:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # Required to checkout and read repo files
+      security-events: write # Required to upload SARIF files to Security tab
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in IaC mode
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "config"
+          scan-ref: "infra-terraform/*.tf"
+          hide-progress: true
+          format: "sarif"
+          output: "trivy-iac.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+      - name: Upload SARIF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-iac
+          path: trivy-iac.sarif
+
+  scan-image:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # Required to checkout and read repo files
+      security-events: write # Required to upload SARIF files to Security tab
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build local Docker image for scanning
+        run: docker build -t learningsteps:test .
+
+      - name: Run Trivy vulnerability scanner in Image mode
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "image"
+          hide-progress: true
+          image-ref: "learningsteps:test"
+          format: "sarif"
+          output: "trivy-image.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+      - name: Upload SARIF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-image
+          path: trivy-image.sarif
+
+  scan-fs:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # Required to checkout and read repo files
+      security-events: write # Required to upload SARIF files to Security tab
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in Secrets mode
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-fs.sarif"
+          severity: "CRITICAL"
+          scanners: "secret"
+          exit-code: "1"
+
+      - name: Upload SARIF artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-fs
+          path: trivy-fs.sarif
+
+  upload-sarif-reports:
+    runs-on: ubuntu-24.04
+    needs: [scan-terraform, scan-image, scan-fs]
+    if: always()
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all SARIF artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: sarif-reports/
+          merge-multiple: true
+
+      - name: Upload Terraform SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: sarif-reports/trivy-iac.sarif
+          category: terraform-iac
+
+      - name: Upload Docker Image SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: sarif-reports/trivy-image.sarif
+          category: docker-image
+
+      - name: Upload Secrets SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: sarif-reports/trivy-fs.sarif
+          category: secrets-fs
