@@ -30,5 +30,5 @@ fi
 
 # Start the API
 echo "🎉 Starting FastAPI server..."
-echo "📖 API docs will be available at: http://localhost:8000/docs"
-cd api && uvicorn main:app --reload --host 127.0.0.1 --port 8000
+echo "📖 API docs will be available at: http://0.0.0.0:8000/docs"
+cd api && uvicorn main:app --reload --host 0.0.0.0 --port 8000

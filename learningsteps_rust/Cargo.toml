@@ -1,0 +1,24 @@
+[package]
+name = "lsteps-rs"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98.1"
+authors = ["Dominic Seel"]
+
+[[bin]]
+name="lsteps"
+path = "src/main.rs"
+
+[dependencies]
+dioxus = { version = "0.7.10", features = ["desktop"] }
+postcard = { version = "1.1.3", features = ["alloc"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.52.3", features = ["full"] }
+uuid = { version = "1.29", features = ["serde", "js"] }
+rand = "0.10.3"
+chacha20poly1305 = "0.11.0"
+argon2 = "0.6.0"
+sha2 = "0.11.1"
+zeroize = { version = "1.9.1", features = ["derive"] }
+hex = "0.4.3"
