@@ -32,3 +32,18 @@ output "acr_name" {
   description = "Azure Container Registry name"
   value       = azurerm_container_registry.learningsteps_acr.name
 }
+
+output "aks_kv_identity_client_id" {
+  description = "Key-Vault client ID"
+  value       = azurerm_kubernetes_cluster.learningsteps_aks_cluster.key_vault_secrets_provider[0].secret_identity[0].client_id
+}
+
+output "key_vault_name" {
+  description = "Azure Key Vault Name"
+  value       = var.az_kv
+}
+
+output "tenant_id" {
+  description = "Tenant ID"
+  value       = data.azurerm_client_config.current.tenant_id
+}

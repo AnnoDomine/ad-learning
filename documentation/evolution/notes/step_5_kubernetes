@@ -1,0 +1,5 @@
+# Kubernetes (k8n)
+
+## How K8n get key vault secrets
+
+AKS get secrets while runtime via "SecretProviderClass".
