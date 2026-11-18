@@ -23,12 +23,12 @@ output "key_vault_uri" {
   value       = azurerm_key_vault.learningsteps_evo_key_vault.vault_uri
 }
 
-output "user_assinged_identity_id" {
-  value = azurerm_user_assigned_identity.msi.id
-  description = "ID of the user-assigned managed identity."
+output "acr_login_server" {
+  description = "Azure Container Registry login server"
+  value       = azurerm_container_registry.learningsteps_acr.login_server
 }
 
-output "user_assinged_identity_principal_id" {
-  value = azurerm_user_assigned_identity.msi.principal_id
-  description = "Principal ID of the user-assigned managed identity"
+output "acr_name" {
+  description = "Azure Container Registry name"
+  value       = azurerm_container_registry.learningsteps_acr.name
 }

@@ -8,13 +8,6 @@ resource "random_password" "password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "azurerm_user_assigned_identity" "msi" {
-  location = var.az_region
-  name = var.name
-  resource_group_name = var.az_rg_name
-  tags = var.tags
-}
-
 resource "azurerm_resource_group" "learningsteps_evo" {
   name     = var.az_rg_name
   location = var.az_region
@@ -95,7 +88,8 @@ resource "azurerm_key_vault" "learningsteps_evo_key_vault" {
 
   network_acls {
     default_action = "Deny"
-    bypass = "AzureService"
+    bypass         = "AzureService"
+    ip_rules       = var.aks_authorized_ip_ranges
   }
 }
 
@@ -133,15 +127,15 @@ resource "azurerm_key_vault_secret" "db_password" {
 # Kubernetes cluster
 
 resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
-  name                = var.az_aks_cluster
-  resource_group_name = azurerm_resource_group.learningsteps_evo.name
-  location            = azurerm_resource_group.learningsteps_evo.location
-  dns_prefix          = "learningsteps-aks"
+  name                              = var.az_aks_cluster
+  resource_group_name               = azurerm_resource_group.learningsteps_evo.name
+  location                          = azurerm_resource_group.learningsteps_evo.location
+  dns_prefix                        = "learningsteps-aks"
   role_based_access_control_enabled = true
 
   api_server_access_profile {
-      authorized_ip_ranges = var.aks_authorized_ip_ranges
-    }
+    authorized_ip_ranges = var.aks_authorized_ip_ranges
+  }
 
   network_profile {
     network_plugin = "azure"
@@ -180,4 +174,17 @@ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
   storage_mb = 32768
 
   depends_on = [azurerm_private_dns_zone_virtual_network_link.learningsteps_priv_dns_vn_link]
+}
+
+resource "azurerm_container_registry" "learningsteps_acr" {
+  name                = var.az_acr
+  resource_group_name = azurerm_resource_group.learningsteps_evo.name
+  location            = azurerm_resource_group.learningsteps_evo.location
+  sku                 = "Basic"
+  admin_enabled       = false
+}
+
+resource "azurerm_role_assignment" "learningsteps_acr_role" {
+  scope        = azurerm_container_registry.learningsteps_acr.id
+  principal_id = azurerm_kubernetes_cluster.learningsteps_aks_cluster.kubelet_identity[0].object_id
 }

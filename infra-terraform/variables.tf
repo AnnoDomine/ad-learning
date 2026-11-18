@@ -64,18 +64,14 @@ variable "az_kv_cert" {
   default     = "learningsteps-evo-kv-cert"
 }
 
-variable "tags" {
-  description = "value of tags to assign to the user-assigned managed identity."
-  type = map(string)
-}
-
-variable "name" {
-  description = "The name of the user-assigned managed identity."
-  type  = string
-}
-
 variable "aks_authorized_ip_ranges" {
   description = "Authorized IP range"
   type = list(string)
   default = [ "127.0.0.1/32" ]
+}
+
+variable "az_acr" {
+  description = "Azure Container Regestry name"
+  type = string
+  default = "learningstepsevolabacr01"
 }

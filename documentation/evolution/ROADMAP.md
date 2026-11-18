@@ -6,7 +6,7 @@
 2. **IaC:** VNET, AKS, AzureDB (PSQL)
 3. **Security:** Scanna and IaC analysis
 4. **CI/CD:** Define pipeline
-5. **ubernetes:** Orchest all iwth Kubernetes
+5. **Kubernetes:** Orchest all with Kubernetes
 6. **Monitoring:** Metric and Dashboard
 
 ## Documentation
@@ -24,6 +24,7 @@ Beside the project description, there are diffents in the final reaching out as 
   - All actions can be manuell triggered on main.
   - Additional we create a workflow to trigger new tag called `tag.yml`.
   - Additional there is a workflow to generate the environment if not exists `init_az.yml` which can be manuel triggerd by the `maintainer` only.
+    - init_az.yml dropped. terraform controlled will run in deploy pipeline.
 - **Methology:**
   - The folder and file structure will be different to the project description.
   - Instead of have all `automatition` folders and files like `infra-terraform` or `Dockerfile` inside the `learningsteps` folder, these will placed inside `workspace-root` folder.
