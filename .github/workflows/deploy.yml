@@ -123,7 +123,6 @@ jobs:
       database_fqdn: ${{ steps.tf_outputs.outputs.database_fqdn }}
       aks_kv_identity_client_id: ${{ steps.tf_outputs.outputs.aks_kv_identity_client_id }}
       key_vault_name: ${{ steps.tf_outputs.outputs.key_vault_name }}
-      tenant_id: ${{ steps.tf_outputs.outputs.tenant_id }}
 
   deploy:
     name: Deploy to azure
@@ -170,7 +169,7 @@ jobs:
           export DATABASE_FQDN="${{ needs.terraform.outputs.database_fqdn }}"
           export AKS_KV_IDENTITY_CLIENT_ID="${{ needs.terraform.outputs.aks_kv_identity_client_id }}"
           export KEY_VAULT_NAME="${{ needs.terraform.outputs.key_vault_name }}"
-          export TENANT_ID="${{ needs.terraform.outputs.tenant_id }}"
+          export TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
 
           for f in k8s-manifests/configmap.yaml k8s-manifests/secret-provider-class.yaml; do
             envsubst < "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
