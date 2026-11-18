@@ -102,6 +102,21 @@ jobs:
 
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
+
+          RG_NAME=$(terraform output -raw resource_group_name)
+          AKS_NAME=$(terraform output -raw aks_cluster_name)
+          KV_NAME=$(terraform output -raw key_vault_name)
+
+          OUTBOUND_ID=$(az aks show \
+            --resource-group "$RG_NAME" \
+            --name "$AKS_NAME" \
+            --query "networkProfile.loadBalancerProfile.effectiveOutboundIPs[0].id" -o tsv)
+          AKS_OUTBOUND_IP=$(az network public-ip show --ids "$OUTBOUND_ID" --query "ipAddress" -o tsv)
+
+          az keyvault network-rule add \
+            --name "$KV_NAME" \
+            --resource-group "$RG_NAME" \
+            --ip-address "${AKS_OUTBOUND_IP}/32" 2>/dev/null || true
       
       - name: Outputs
         id: tf_outputs 
