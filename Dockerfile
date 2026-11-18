@@ -1,4 +1,4 @@
-FROM python:3-slim
+FROM python:3.13-slim
 
 RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
@@ -9,6 +9,10 @@ RUN [ "useradd", "apiuser" ]
 COPY learningsteps/api/requirements.txt .
 
 RUN [ "pip", "install", "--no-cache-dir", "--upgrade", "-r", "requirements.txt", "setuptools>=78.1.1", "msgpack>=1.2.3", "urllib3>=2.8.0" ]
+
+# pip and setuptools have vulnaribilities so we need to remove them
+RUN [ "pip" "uninstall" "-y" "pip" "setuptools" ]
+RUN [ "rm" "-rf" "/usr/local/lib/python*/ensurepip" ]
 
 COPY learningsteps/api/ .
 
