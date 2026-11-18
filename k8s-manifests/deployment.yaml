@@ -11,6 +11,10 @@ spec:
       labels:
         app: learningsteps-api
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
       - name: secrets-store-inline
         csi:
@@ -20,6 +24,12 @@ spec:
             secretProviderClass: "azure-kv-learningsteps"
       containers:
       - name: learningsteps-api
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         image: learningsteps:placeholder
         volumeMounts:
         - name: secrets-store-inline
