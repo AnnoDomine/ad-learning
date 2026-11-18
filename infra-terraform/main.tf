@@ -25,9 +25,14 @@ resource "azurerm_subnet" "learningsteps_sn" {
   resource_group_name  = azurerm_resource_group.learningsteps_evo.name
   virtual_network_name = azurerm_virtual_network.learningsteps_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
+
   service_endpoint {
     service = "Microsoft.Storage"
   }
+  service_endpoint {
+    service = "Microsoft.KeyVault"
+  }
+
   delegation {
     name = "fs"
     service_delegation {
@@ -86,10 +91,24 @@ resource "azurerm_key_vault" "learningsteps_evo_key_vault" {
     ]
   }
 
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = azurerm_kubernetes_cluster.learningsteps_aks_cluster.key_vault_secrets_provider[0].secret_identity[0].object_id
+
+    key_permissions = [
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get",
+    ]
+  }
+
   network_acls {
-    default_action = "Deny"
-    bypass         = "AzureService"
-    ip_rules       = var.aks_authorized_ip_ranges
+    default_action             = "Deny"
+    bypass                     = "AzureServices"
+    ip_rules                   = var.aks_authorized_ip_ranges
+    virtual_network_subnet_ids = [azurerm_subnet.learningsteps_sn.id]
   }
 }
 
@@ -155,6 +174,10 @@ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
   node_provisioning_profile {
     mode = "Manual"
   }
+
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
+  }
 }
 
 # Postgresql DB
@@ -187,4 +210,5 @@ resource "azurerm_container_registry" "learningsteps_acr" {
 resource "azurerm_role_assignment" "learningsteps_acr_role" {
   scope        = azurerm_container_registry.learningsteps_acr.id
   principal_id = azurerm_kubernetes_cluster.learningsteps_aks_cluster.kubelet_identity[0].object_id
+  role_definition_name = "AcrPull"
 }

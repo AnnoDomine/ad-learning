@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: learningsteps-config
+data:
+  POSTGRES_USER: "evo_ls_psql"
+  POSTGRES_DB: "postgres"
+  POSTGRES_HOST: "${DATABASE_FQDN}"
