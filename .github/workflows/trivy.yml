@@ -38,7 +38,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-iac
           path: trivy-iac.sarif
           
   scan-t8n-manifest:
@@ -69,7 +69,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-iac
           path: trivy-iac.sarif
 
   scan-image:
@@ -104,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-image
           path: trivy-image.sarif
 
   scan-fs:
@@ -135,7 +135,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-fs
           path: trivy-fs.sarif
 
   upload-sarif-reports:
