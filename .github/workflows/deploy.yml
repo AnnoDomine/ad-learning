@@ -1,0 +1,206 @@
+name: Generate/Update infrastructure and deply to azure
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform:
+    name: Generate/update infrastructure
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Azure login
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create RG, Storage, and Storage Container for tfstate
+        env:
+          TF_STATE_RG: ${{ secrets.AZURE_TF_STATE_RG }}
+          TF_STATE_STORAGE: ${{ secrets.TF_STATE_STORAGE }}
+          TF_STATE_CONTAINER: ${{ secrets.TF_STATE_CONTAINER }}
+          LOCATION: ${{ secrets.LOCATION }}
+        run: |
+          if [ "$(az group exists --name "$TF_STATE_RG")" = "false" ]; then
+            az group create \
+              --name "$TF_STATE_RG" \
+              --location "$LOCATION";
+          fi
+
+          if ! az storage account show --name "$TF_STATE_STORAGE" --resource-group "$TF_STATE_RG" >/dev/null 2>&1; then 
+            az storage account create \
+              --name "$TF_STATE_STORAGE" \
+              --resource-group "$TF_STATE_RG" \
+              --location "$LOCATION" \
+              --sku Standard_LRS \
+              --encryption-services blob \
+              --min-tls-version TLS1_2 \
+              --allow-blob-public-access false
+
+            az storage account blob-service-properties update \
+              --account-name "$TF_STATE_STORAGE" \
+              --resource-group "$TF_STATE_RG" \
+              --enable-versioning true;
+          fi
+
+          CONTAINER_EXISTS=$(az storage container exists \
+            --name "$TF_STATE_CONTAINER" \
+            --account-name "$TF_STATE_STORAGE" \
+            --auth-mode login \
+            --query exists -o tsv 2>/dev/null || echo "false")
+
+          if [ "$CONTAINER_EXISTS" != "true" ]; then
+            az storage container create \
+              --name "$TF_STATE_CONTAINER" \
+              --account-name "$TF_STATE_STORAGE" \
+              --auth-mode login;
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+
+      - name: Init Terraform
+        working-directory: ./infra-terraform
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.AZURE_TF_STATE_RG }}" \
+            -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE }}" \
+            -backend-config="container_name=${{ secrets.TF_STATE_CONTAINER }}" \
+            -backend-config="key=learningsteps.tfstate" \
+            -backend-config="use_azuread_auth=true"
+
+      - name: Plan & Apply Terraform
+        working-directory: ./infra-terraform
+        run: |
+          RUNNER_IP=$(curl -s https://ifconfig.me)
+          export TF_VAR_aks_authorized_ip_ranges="[\"${RUNNER_IP}/32\"]"
+
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+      
+      - name: Outputs
+        id: tf_outputs 
+        working-directory: ./infra-terraform
+        run: |
+          for output in $(grep -oP '^output "\K[^"]+(?=" \{)' ./outputs.tf); do
+            tf_value=$(terraform output -raw "$output")
+            echo "${output}=${tf_value}" >> "$GITHUB_OUTPUT"
+
+            pretty_name="${output//_/ }"
+            echo "Gefunden: **${pretty_name}** = ${tf_value}" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+    outputs:
+      resource_group_name: ${{ steps.tf_outputs.outputs.resource_group_name }}
+      aks_cluster_name: ${{ steps.tf_outputs.outputs.aks_cluster_name }}
+      acr_login_server: ${{ steps.tf_outputs.outputs.acr_login_server }}
+      acr_name: ${{ steps.tf_outputs.outputs.acr_name }}
+
+  deploy:
+    name: Deploy to azure
+    runs-on: ubuntu-latest
+    needs: [terraform]
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Azure login
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+      - name: Build and push docker container
+        run: |
+          ACR_LOGIN="${{ needs.terraform.outputs.acr_login_server }}"
+          az acr login --name "${{ needs.terraform.outputs.acr_name }}"
+          docker build -t "${ACR_LOGIN}/learningsteps:${{ github.ref_name }}" .
+          docker push "${ACR_LOGIN}/learningsteps:${{ github.ref_name }}"
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
+      
+      - name: AKS deployment
+        run: |
+          RUNNER_IP=$(curl -s https://ifconfig.me)
+          az aks update \
+            --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
+            --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
+            --api-server-authorized-ip-ranges "${RUNNER_IP}/32"
+
+          az aks get-credentials \
+            --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
+            --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
+            --overwrite-existing
+
+          kubectl apply -f k8s-manifests/
+          kubectl set image deployment/learningsteps-api learningsteps-api="${{ needs.terraform.outputs.acr_login_server }}/learningsteps:${{ github.ref_name }}"
+
+          kubectl rollout status deployment/learningsteps-api --timeout=180s
+
+  health-check:
+    name: Comfirm API is reachable
+    runs-on: ubuntu-latest
+    needs: [terraform, deploy]
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Azure login
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
+        
+      - name: AKS health-check
+        run: |
+          RUNNER_IP=$(curl -s https://ifconfig.me)
+          az aks update \
+            --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
+            --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
+            --api-server-authorized-ip-ranges "${RUNNER_IP}/32"
+
+          az aks get-credentials \
+            --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
+            --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
+            --overwrite-existing
+
+          EXTERNAL_IP=""
+          for i in $(seq 1 18); do
+            EXTERNAL_IP=$(kubectl get svc learningsteps-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$EXTERNAL_IP" ]; then break; fi
+            echo "Warte auf LoadBalancer IP ($i/18)..."
+            sleep 10
+          done
+
+          test -n "$EXTERNAL_IP"
+          curl -fsS "http://${EXTERNAL_IP}/docs" > /dev/null
+          echo "API erreichbar unter: http://${EXTERNAL_IP}/docs" >> "$GITHUB_STEP_SUMMARY"
