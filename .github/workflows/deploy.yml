@@ -88,6 +88,16 @@ jobs:
         working-directory: ./infra-terraform
         run: |
           RUNNER_IP=$(curl -s https://ifconfig.me)
+          KV_NAME=$(terraform output -raw key_vault_name 2>/dev/null || true)
+          RG_NAME=$(terraform output -raw resource_group_name 2>/dev/null || true)
+
+          if [ -n "$KV_NAME" ] && [ -n "$RG_NAME" ]; then
+            az keyvault network-rule add \
+              --name "$KV_NAME" \
+              --resource-group "$RG_NAME" \
+              --ip-address "${RUNNER_IP}/32" 2>/dev/null || true
+          fi
+
           export TF_VAR_aks_authorized_ip_ranges="[\"${RUNNER_IP}/32\"]"
 
           terraform plan -out=tfplan
