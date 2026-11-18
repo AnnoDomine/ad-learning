@@ -8,6 +8,13 @@ resource "random_password" "password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
+resource "azurerm_user_assigned_identity" "msi" {
+  location = var.az_region
+  name = var.name
+  resource_group_name = var.az_rg_name
+  tags = var.tags
+}
+
 resource "azurerm_resource_group" "learningsteps_evo" {
   name     = var.az_rg_name
   location = var.az_region
@@ -85,6 +92,11 @@ resource "azurerm_key_vault" "learningsteps_evo_key_vault" {
       "Purge"
     ]
   }
+
+  network_acls {
+    default_action = "Deny"
+    bypass = "AzureService"
+  }
 }
 
 resource "azurerm_key_vault_key" "generated" {
@@ -125,6 +137,16 @@ resource "azurerm_kubernetes_cluster" "learningsteps_aks_cluster" {
   resource_group_name = azurerm_resource_group.learningsteps_evo.name
   location            = azurerm_resource_group.learningsteps_evo.location
   dns_prefix          = "learningsteps-aks"
+  role_based_access_control_enabled = true
+
+  api_server_access_profile {
+      authorized_ip_ranges = var.aks_authorized_ip_ranges
+    }
+
+  network_profile {
+    network_plugin = "azure"
+    network_policy = "azure"
+  }
 
   identity {
     type = "SystemAssigned"

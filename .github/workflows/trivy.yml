@@ -16,8 +16,11 @@ jobs:
       contents: read # Required to checkout and read repo files
       security-events: write # Required to upload SARIF files to Security tab
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner in IaC mode
         uses: aquasecurity/trivy-action@v0.36.0
@@ -43,8 +46,11 @@ jobs:
       contents: read # Required to checkout and read repo files
       security-events: write # Required to upload SARIF files to Security tab
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build local Docker image for scanning
         run: docker build -t learningsteps:test .
@@ -73,8 +79,11 @@ jobs:
       contents: read # Required to checkout and read repo files
       security-events: write # Required to upload SARIF files to Security tab
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner in Secrets mode
         uses: aquasecurity/trivy-action@v0.36.0
@@ -102,8 +111,11 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download all SARIF artifacts
         uses: actions/download-artifact@v4

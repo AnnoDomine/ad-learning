@@ -22,3 +22,13 @@ output "key_vault_uri" {
   description = "URI of the Azure Key Vault"
   value       = azurerm_key_vault.learningsteps_evo_key_vault.vault_uri
 }
+
+output "user_assinged_identity_id" {
+  value = azurerm_user_assigned_identity.msi.id
+  description = "ID of the user-assigned managed identity."
+}
+
+output "user_assinged_identity_principal_id" {
+  value = azurerm_user_assigned_identity.msi.principal_id
+  description = "Principal ID of the user-assigned managed identity"
+}
