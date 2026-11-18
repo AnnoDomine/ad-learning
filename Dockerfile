@@ -8,11 +8,10 @@ RUN [ "useradd", "apiuser" ]
 
 COPY learningsteps/api/requirements.txt .
 
-RUN [ "pip", "install", "--no-cache-dir", "--upgrade", "-r", "requirements.txt", "setuptools>=78.1.1", "msgpack>=1.2.3", "urllib3>=2.8.0" ]
+RUN [ "pip", "install", "--no-cache-dir", "--upgrade", "-r", "requirements.txt", "msgpack>=1.2.3", "urllib3>=2.8.0" ]
 
 # pip and setuptools have vulnaribilities so we need to remove them
-RUN [ "pip" "uninstall" "-y" "pip" "setuptools" ]
-RUN [ "rm" "-rf" "/usr/local/lib/python*/ensurepip" ]
+RUN pip uninstall -y pip setuptools && rm -rf /usr/local/lib/python*/ensurepip
 
 COPY learningsteps/api/ .
 
