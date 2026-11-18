@@ -51,6 +51,8 @@ jobs:
           pip install pytest coverage httpx
       - name: Test with pytest
         working-directory: learningsteps/
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
         run: |
           PYTHONPATH=api coverage run -m pytest tests/ -v -s
       - name: Generate Coverage Report
