@@ -197,6 +197,10 @@ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
   storage_mb = 32768
 
   depends_on = [azurerm_private_dns_zone_virtual_network_link.learningsteps_priv_dns_vn_link]
+
+  lifecycle {
+    ignore_changes = [zone]
+  }
 }
 
 resource "azurerm_container_registry" "learningsteps_acr" {
@@ -208,7 +212,7 @@ resource "azurerm_container_registry" "learningsteps_acr" {
 }
 
 resource "azurerm_role_assignment" "learningsteps_acr_role" {
-  scope        = azurerm_container_registry.learningsteps_acr.id
-  principal_id = azurerm_kubernetes_cluster.learningsteps_aks_cluster.kubelet_identity[0].object_id
+  scope                = azurerm_container_registry.learningsteps_acr.id
+  principal_id         = azurerm_kubernetes_cluster.learningsteps_aks_cluster.kubelet_identity[0].object_id
   role_definition_name = "AcrPull"
 }

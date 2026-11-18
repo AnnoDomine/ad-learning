@@ -69,7 +69,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-iac
           path: trivy-iac.sarif
 
   scan-image:
