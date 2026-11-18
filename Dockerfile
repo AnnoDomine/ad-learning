@@ -8,7 +8,7 @@ RUN [ "useradd", "apiuser" ]
 
 COPY learningsteps/api/requirements.txt .
 
-RUN [ "pip", "install", "--no-cache-dir", "-r", "requirements.txt", "setuptools>=78.1.1", "msgpack>=1.2.3", "urllib3>=2.8.0" ]
+RUN [ "pip", "install", "--no-cache-dir", "--upgrade", "-r", "requirements.txt", "setuptools>=78.1.1", "msgpack>=1.2.3", "urllib3>=2.8.0" ]
 
 COPY learningsteps/api/ .
 
