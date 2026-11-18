@@ -69,8 +69,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-iac
-          path: trivy-iac.sarif
+          name: sarif-k8s
+          path: trivy-k8s.sarif
 
   scan-image:
     runs-on: ubuntu-24.04
@@ -104,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-image
           path: trivy-image.sarif
 
   scan-fs:
@@ -135,7 +135,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-fs
           path: trivy-fs.sarif
 
   upload-sarif-reports:
