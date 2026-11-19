@@ -128,9 +128,8 @@ Die vollständige Automatisierung verteilt sich auf sechs Workflows unter [`.git
 
 ## 7. Visuelle Nachweise (Azure & GitHub Screenshots)
 
-> Die folgenden Screenshots werden unter [`documentation/evolution/images/`](images/) abgelegt (siehe [Screenshot-Checkliste](images/README.md)).
-
 ### 7.1 Azure-Infrastruktur & Remote State
+
 ![Azure Resource Group Übersicht](images/01_azure_resource_group.png)
 *Abbildung 1: Vollständig per Terraform provisionierte Ressourcen in `learningsteps-evo-lab-rg` (AKS, PostgreSQL Flexible Server, Key Vault, ACR, VNet & Private DNS).*
 
@@ -138,6 +137,7 @@ Die vollständige Automatisierung verteilt sich auf sechs Workflows unter [`.git
 *Abbildung 2: Automatisiert über `deploy.yml` angelegter Azure Storage Container (`tfstate`) mit aktiviertem Blob-Versioning.*
 
 ### 7.2 AKS-Workloads & Live-API
+
 ![Azure AKS Workloads und LoadBalancer](images/03_azure_aks_workloads.png)
 *Abbildung 3: Laufende `learningsteps-api`-Pods auf AKS inklusive HPA (2–5 Replicas) und öffentlichem LoadBalancer-Service.*
 
@@ -145,6 +145,7 @@ Die vollständige Automatisierung verteilt sich auf sechs Workflows unter [`.git
 *Abbildung 4: Live-Verifikation der API-Dokumentation (`http://<EXTERNAL-IP>/docs`) über die vom `health-check`-Job gemeldete Azure Public IP.*
 
 ### 7.3 DevSecOps-Pipelines, Security-Tab & Recovery
+
 ![GitHub Actions Pipeline Übersicht](images/04_github_actions_pipelines.png)
 *Abbildung 5: Erfolgreiche Durchläufe von `Lint learningsteps`, `Security Scan (Trivy)`, `Release Tagging Pipeline` und `deploy`.*
 
@@ -159,12 +160,15 @@ Die vollständige Automatisierung verteilt sich auf sechs Workflows unter [`.git
 ## 8. Key Learnings, Fazit & Ausblick
 
 ### Wichtigste technische Erkenntnisse
+
 1. **Remote State gehört nicht ins eigene `main.tf`:** Ein idempotenter Bootstrap-Step vor `terraform init` löst das Henne-Ei-Problem beim Erstaufbau und verhindert, dass `terraform destroy` seinen eigenen State löscht.
 2. **Strenge Key-Vault-Firewalls erfordern CI/CD-Awareness:** Sowohl wechselnde GitHub-Runner-IPs (schon während `terraform plan`) als auch die effektive AKS-Node-Outbound-IP müssen gezielt autorisiert werden.
 3. **GitHub OIDC & Secret-Masking im Detail:** GitHub inkludierte numerische Owner-/Repo-IDs im `sub`-Claim (`@6992858`/`@1437016446`) und filtert Job-Outputs heraus, die exakt einem Repository-Secret (`AZURE_TENANT_ID`) entsprechen.
 4. **Hardening bis ins Runtime-Image:** Erst die Entfernung von `pip`, `setuptools` und `ensurepip` beseitigt vendored Python-CVEs vollständig; im Kubernetes-Cluster benötigt `runAsNonRoot: true` zwingend eine numerische UID (`runAsUser: 1000`).
+5. **Regionale SKU-Verfügbarkeit & Provider-Validierung einplanen:** Ältere Azure Burstable-v1-SKUs (`B_Standard_B1ms`, `B_Standard_B2s`) laufen in `westeurope` regelmäßig in temporäre `SkuNotAvailable`-Kapazitätsengpässe, obwohl `az postgres flexible-server list-skus` sie grundsätzlich aufführt. Gleichzeitig weist die Regex-Validierung des `azurerm`-Providers (`~> 5.13.0`) brandneue v2-Namen (`B_Standard_B2als_v2`) ab – zuverlässig gelöst durch `GP_Standard_D2ds_v5` und lokalen Vorab-Check mit `terraform validate`.
 
 ### Weiterführende Dokumente & Ausblick
+
 * **Chronik & Troubleshooting-Log:** [`EVOLUTION_JOURNAL.md`](EVOLUTION_JOURNAL.md)
 * **Detailnotizen:** [`step_1_docker.md`](notes/step_1_docker.md) · [`step_2_iac.md`](notes/step_2_iac.md) · [`step_3_security.md`](notes/step_3_security.md) · [`step_4_workflows.md`](notes/step_4_workflows.md) · [`step_5_kubernetes.md`](notes/step_5_kubernetes.md)
 * **Ausblick (Step 6 – Optional):** Instrumentierung der FastAPI-App mit `prometheus_client` (`/metrics`) sowie Bereitstellung von Prometheus & Grafana im AKS-Cluster zur Visualisierung von Latenz, Request-Rate und DB-Status.

@@ -1,5 +1,5 @@
 # LearningSteps Origins
- 
+
 ## Welcome to the Cloud! ☁️
 
 It is time to take your code off localhost and into the real world. In this project, you will act as a Cloud Architect to deploy the LearningSteps API to a secure, production-ready 2-tier architecture on Microsoft Azure.
@@ -17,7 +17,7 @@ Don't panic! Over the next two weeks, we will deep-dive into Azure Administratio
 
 LearningSteps is a Python FastAPI application backed by a PostgreSQL database, designed to help users track their daily learning journey. It provides a RESTful API to Create, Read, Update, and Delete (CRUD) journal entries.
 
-# LearningSteps - A Companion for the Journey
+## LearningSteps - A Companion for the Journey
 
 > This deployment is just the beginning. LearningSteps will serve as our core platform throughout the curriculum, evolving alongside your skills. In future modules, we will return to this architecture to implement:
 
@@ -28,14 +28,14 @@ LearningSteps is a Python FastAPI application backed by a PostgreSQL database, d
 
 Build it well now, and you will have a solid foundation for the advanced challenges ahead!
 
-## Challenge Overview
+### Challenge Overview
 
 > Create a secure 2-tier architecture on Azure:
 
 - Tier 1: FastAPI application server (internet-accessible)
 - Tier 2: PostgreSQL database server (private, secure)
 
-## Learning Objectives
+### Learning Objectives
 
 ![Screen2](https://cybersteps-prod-uploads.fra1.digitaloceanspaces.com/assets/43/431509916e970621ab3a529580843221bfcad33fd81c7770ff8c2ba2fb299fb8.png)
 
@@ -45,30 +45,30 @@ Build it well now, and you will have a solid foundation for the advanced challen
 - Deploy a production-ready multi-tier application
 - Manage environment variables and application secrets in a cloud environment
 
-## Prerequisites & Setup
+### Prerequisites & Setup
 
 > Before starting the infrastructure deployment, you must prepare the application code.
 
-### Get the Code
+#### Get the Code
 
 Clone the repository:
 
-- Repo URL: https://github.com/CyberstepsDE/learningsteps
+- Repo URL: <https://github.com/CyberstepsDE/learningsteps>
 
-### Choose Your Path
+#### Choose Your Path
 
 > You have two options for the codebase:
 
 - The Developer Challenge: Use the main branch. This version contains incomplete development tasks (TODOs). You will need to finish the code to get the API working locally before deploying.
 - The Reference Implementation: Switch to the reference branch (Link). This branch has all tasks completed and is ready for immediate deployment if you want to focus purely on the infrastructure side.
 
-### Cloud Requirements
+#### Cloud Requirements
 
 - Microsoft Azure account with appropriate permissions (Active Subscription)
 
-## Your Mission
+### Your Mission
 
-### Design Your Architecture
+#### Design Your Architecture
 
 > Research and plan your cloud infrastructure:
 
@@ -76,13 +76,13 @@ Clone the repository:
 - What networking components do you need? (e.g., Network Interfaces, Public IPs)
 - How will you secure communication between the FastAPI app and PostgreSQL? (e.g., NSGs)
 
-### Prepare the Application
+#### Prepare the Application
 
 - If you chose the Developer Challenge, complete the code tasks in the main branch first. Verify the API works locally.
 - If you chose the Reference Implementation, verify you can run the application locally or containerize it successfully.
 - Prepare your environment variables (.env) for the cloud production environment.
 
-### Deploy the API Server
+#### Deploy the API Server
 
 > Set up your application server in the public tier:
 
@@ -90,7 +90,7 @@ Clone the repository:
 - Deploy your Journal API application
 - Configure secure access and networking
 
-### Deploy the Database Server
+#### Deploy the Database Server
 
 > Set up PostgreSQL in the private tier:
 
@@ -98,7 +98,7 @@ Clone the repository:
 - Configure it to accept connections from your API server
 - Implement proper security measures
 
-### Test Your Deployment
+#### Test Your Deployment
 
 > Validate your architecture:
 
@@ -106,7 +106,7 @@ Clone the repository:
 - The Database is unreachable from the public internet.
 - Data persists between server restarts.
 
-## Success Criteria
+### Success Criteria
 
 Your deployment succeeds when you can demonstrate:
 
@@ -116,7 +116,7 @@ Your deployment succeeds when you can demonstrate:
 ✅ Data persists even if the API server is rebooted or redeployed.  
 ✅ Network Security Groups are tightly scoped (Least Privilege).  
 
-## Document Your Learning
+### Document Your Learning
 
 Create a technical writeup covering:
 
@@ -125,6 +125,6 @@ Create a technical writeup covering:
 - Challenges: Any issues connecting the tiers?
 - Key Learnings: What did you learn about Azure networking?
 
-### Remember
+#### Remember
 
 This is about understanding cloud patterns, not following a recipe. Research, experiment, and learn from the journey. Whether you fix the code yourself or use the reference implementation, the goal is a secure, working cloud deployment.

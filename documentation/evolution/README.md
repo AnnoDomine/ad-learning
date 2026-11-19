@@ -5,14 +5,16 @@ Dieses Verzeichnis bündelt die offizielle Abschlussdokumentation, das chronolog
 ---
 
 ## 🗺️ Zentrale Dokumente
+
 * **[EVOLUTION_SUMMARY.md](EVOLUTION_SUMMARY.md)** – Offizielle Projektzusammenfassung (Executive Summary, Zielarchitektur, Success Criteria Audit, Hardening & visuelle Nachweise)
-* **[EVOLUTION_JOURNAL.md](EVOLUTION_JOURNAL.md)** – Chronologische Step-by-Step-Verlaufsdokumentation & 8-Punkte-Troubleshooting-Log
+* **[EVOLUTION_JOURNAL.md](EVOLUTION_JOURNAL.md)** – Chronologische Step-by-Step-Verlaufsdokumentation & 9-Punkte-Troubleshooting-Log
 * **[ROADMAP.md](ROADMAP.md)** – Stufenplan, bewusste Architektur-Abweichungen (Root-Struktur, aufgeteilte Workflows) und Meilensteine
 * **[images/README.md](images/README.md)** – Checkliste & Zielpfad für deine Azure-/GitHub-Screenshots
 * **[output/](output/)** – Archivierte Trivy- & Scan-Protokolle
 * **[scripts/](scripts/)** – OIDC-Bootstrap (`tfstate_oidc.sh`) und Step-1-Hilfsskripte
 
 ### 📝 Etappen-Notizen (`notes/`)
+
 * **[notes/step_1_docker.md](notes/step_1_docker.md)** – Containerisierung & erstes manuelles ACR-Deployment
 * **[notes/step_2_iac.md](notes/step_2_iac.md)** – Infrastructure as Code (Terraform)
 * **[notes/step_3_security.md](notes/step_3_security.md)** – Initiale Security-Analyse & Baseline-Ergebnisse
