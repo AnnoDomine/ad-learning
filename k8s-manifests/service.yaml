@@ -1,3 +1,9 @@
+# ==============================================================================
+# Service – Public Azure LoadBalancer
+# ==============================================================================
+# Exposes the LearningSteps API publicly on HTTP port 80 and forwards traffic
+# to Uvicorn on container port 8000 for pods matching `app: learningsteps-api`.
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,5 +13,5 @@ spec:
   selector:
     app: learningsteps-api
   ports:
-  - port: 80
-    targetPort: 8000
+    - port: 80
+      targetPort: 8000

@@ -1,3 +1,10 @@
+# ==============================================================================
+# Release Workflow – Semantic Tagging Trigger
+# ==============================================================================
+# Manually creates and pushes an annotated semantic version tag (`v<version>`)
+# strictly from `main`. Pushing the tag automatically triggers `deploy.yml`
+# (`push.tags: "v*.*.*"`), keeping release deployments explicit and auditable.
+
 name: Release Tagging Pipeline
 
 on:
@@ -8,6 +15,7 @@ on:
         required: true
         type: string
 
+# Write access is required solely to push the newly created Git tag
 permissions:
   contents: write
 
@@ -15,6 +23,7 @@ jobs:
   tag:
     name: Create & Push Git Tag
     runs-on: ubuntu-latest
+    # Enforce tagging from `main` only so unreviewed feature branches cannot release
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
@@ -32,6 +41,7 @@ jobs:
         run: |
           TAG_NAME="v${{ inputs.version }}"
           echo "Checking if tag $TAG_NAME already exists..."
+          # Guard against overwriting an existing release tag
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
             echo "Error: Tag $TAG_NAME already exists!" >&2
             exit 1

@@ -1,3 +1,12 @@
+# ==============================================================================
+# Deployment – LearningSteps FastAPI Application
+# ==============================================================================
+# Deploys the hardened FastAPI container to AKS with:
+#   - Pod/container securityContext compliance (Trivy KSV-0014 & KSV-0118 clean)
+#   - Azure Key Vault CSI volume mount to trigger `learningsteps-db-secret` sync
+#   - Dynamic `DATABASE_URL` composition from ConfigMap + Key Vault Secret
+#   - Resource requests/limits required by HPA and readiness/liveness HTTP probes
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -11,73 +20,80 @@ spec:
       labels:
         app: learningsteps-api
     spec:
+      # Pod-level security context: numeric UID/GID 1000 is required because
+      # Kubernetes cannot verify non-numeric usernames (e.g., `apiuser`) before launch
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      # CSI volume must be mounted so the Secrets Store driver syncs Key Vault secrets
       volumes:
-      - name: secrets-store-inline
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "azure-kv-learningsteps"
-      containers:
-      - name: learningsteps-api
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
-        image: learningsteps:placeholder
-        volumeMounts:
         - name: secrets-store-inline
-          mountPath: "/mnt/secrets-store"
-          readOnly: true
-        env:
-        - name: POSTGRES_USER
-          valueFrom:
-            configMapKeyRef:
-              name: learningsteps-config
-              key: POSTGRES_USER
-        - name: POSTGRES_DB
-          valueFrom:
-            configMapKeyRef:
-              name: learningsteps-config
-              key: POSTGRES_DB
-        - name: POSTGRES_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: learningsteps-config
-              key: POSTGRES_HOST
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: learningsteps-db-secret
-              key: DB_PASSWORD
-        - name: DATABASE_URL
-          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)?sslmode=require"
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: 8000
-        readinessProbe:
-          httpGet:
-            path: /docs
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /docs
-            port: 8000
-          initialDelaySeconds: 15
-          periodSeconds: 20
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kv-learningsteps"
+      containers:
+        - name: learningsteps-api
+          # Container-level hardening: immutable root FS, no privilege escalation, no Linux caps
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          # Placeholder replaced during CI/CD via `kubectl set image` to the release ACR tag
+          image: learningsteps:placeholder
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: learningsteps-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: learningsteps-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: learningsteps-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: learningsteps-db-secret
+                  key: DB_PASSWORD
+            # Compose PostgreSQL TLS connection string from ConfigMap + K8s Secret
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)?sslmode=require"
+          # CPU/memory baseline enables HPA utilization calculations and prevents node exhaustion
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20

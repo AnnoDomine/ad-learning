@@ -1,3 +1,9 @@
+# ==============================================================================
+# HorizontalPodAutoscaler – CPU-Based Pod Scaling
+# ==============================================================================
+# Maintains 2-5 replicas of `learningsteps-api` and scales out automatically
+# whenever average pod CPU utilization exceeds 70% of requested CPU (`100m`).
+
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -10,9 +16,9 @@ spec:
   minReplicas: 2
   maxReplicas: 5
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

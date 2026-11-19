@@ -1,4 +1,14 @@
-name: Generate/Update infrastructure and deply to azure
+# ==============================================================================
+# CD Workflow – Provision Azure Infrastructure & Deploy to AKS
+# ==============================================================================
+# Triggered on semantic release tags (`v*.*.*`) or manually via workflow_dispatch.
+# Authenticates passwordlessly via OIDC bound to the `production` GitHub
+# environment (`id-token: write`) and executes three sequential jobs:
+#   1. terraform    – Idempotent remote-state setup, `terraform apply`, outputs
+#   2. deploy       – ACR image build/push, `envsubst` manifest injection, AKS rollout
+#   3. health-check – Polls LoadBalancer public IP and verifies HTTP 200 on /docs
+
+name: Generate/Update infrastructure and deploy to azure
 
 on:
   push:
@@ -6,6 +16,7 @@ on:
       - "v*.*.*"
   workflow_dispatch:
 
+# `id-token: write` allows GitHub Actions to request short-lived OIDC tokens for Azure
 permissions:
   contents: read
   id-token: write
@@ -14,6 +25,7 @@ jobs:
   terraform:
     name: Generate/update infrastructure
     runs-on: ubuntu-latest
+    # Binds the OIDC subject claim to `environment:production` across tag & manual runs
     environment: production
     steps:
       - name: Checkout repository
@@ -21,7 +33,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Azure login
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
@@ -29,6 +41,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Idempotent bootstrap for Terraform remote state outside main.tf so
+      # `terraform destroy` never deletes its own state storage container
       - name: Create RG, Storage, and Storage Container for tfstate
         env:
           TF_STATE_RG: ${{ secrets.AZURE_TF_STATE_RG }}
@@ -42,7 +56,7 @@ jobs:
               --location "$LOCATION";
           fi
 
-          if ! az storage account show --name "$TF_STATE_STORAGE" --resource-group "$TF_STATE_RG" >/dev/null 2>&1; then 
+          if ! az storage account show --name "$TF_STATE_STORAGE" --resource-group "$TF_STATE_RG" >/dev/null 2>&1; then
             az storage account create \
               --name "$TF_STATE_STORAGE" \
               --resource-group "$TF_STATE_RG" \
@@ -52,6 +66,7 @@ jobs:
               --min-tls-version TLS1_2 \
               --allow-blob-public-access false
 
+            # Enable blob versioning so historical state snapshots can be recovered
             az storage account blob-service-properties update \
               --account-name "$TF_STATE_STORAGE" \
               --resource-group "$TF_STATE_RG" \
@@ -77,6 +92,7 @@ jobs:
       - name: Init Terraform
         working-directory: ./infra-terraform
         run: |
+          # Inject backend details dynamically and authenticate via Entra ID OIDC
           terraform init \
             -backend-config="resource_group_name=${{ secrets.AZURE_TF_STATE_RG }}" \
             -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE }}" \
@@ -91,6 +107,8 @@ jobs:
           KV_NAME=$(terraform output -raw key_vault_name 2>/dev/null || true)
           RG_NAME=$(terraform output -raw resource_group_name 2>/dev/null || true)
 
+          # Pre-authorize the ephemeral runner IP on an existing Key Vault before
+          # `terraform plan` refreshes state (avoids ForbiddenByFirewall during read)
           if [ -n "$KV_NAME" ] && [ -n "$RG_NAME" ]; then
             az keyvault network-rule add \
               --name "$KV_NAME" \
@@ -103,6 +121,8 @@ jobs:
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
 
+          # Re-authorize the AKS cluster's effective outbound IP on Key Vault so the
+          # CSI Secrets Provider on AKS nodes can fetch `db-admin-password` at runtime
           RG_NAME=$(terraform output -raw resource_group_name)
           AKS_NAME=$(terraform output -raw aks_cluster_name)
           KV_NAME=$(terraform output -raw key_vault_name)
@@ -117,11 +137,12 @@ jobs:
             --name "$KV_NAME" \
             --resource-group "$RG_NAME" \
             --ip-address "${AKS_OUTBOUND_IP}/32" 2>/dev/null || true
-      
+
       - name: Outputs
-        id: tf_outputs 
+        id: tf_outputs
         working-directory: ./infra-terraform
         run: |
+          # Export all Terraform outputs dynamically into $GITHUB_OUTPUT & Job Summary
           for output in $(grep -oP '^output "\K[^"]+(?=" \{)' ./outputs.tf); do
             tf_value=$(terraform output -raw "$output")
             echo "${output}=${tf_value}" >> "$GITHUB_OUTPUT"
@@ -150,26 +171,27 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Azure login
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
+
       - name: Build and push docker container
         run: |
           ACR_LOGIN="${{ needs.terraform.outputs.acr_login_server }}"
           az acr login --name "${{ needs.terraform.outputs.acr_name }}"
           docker build -t "${ACR_LOGIN}/learningsteps:${{ github.ref_name }}" .
           docker push "${ACR_LOGIN}/learningsteps:${{ github.ref_name }}"
-      
+
       - name: Setup kubectl
         uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
-      
+
       - name: AKS deployment
         run: |
+          # Each GitHub Actions job runs on a fresh VM; update AKS API firewall for this runner
           RUNNER_IP=$(curl -s https://ifconfig.me)
           az aks update \
             --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
@@ -181,6 +203,8 @@ jobs:
             --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
             --overwrite-existing
 
+          # `TENANT_ID` is sourced from secrets directly because GitHub masks/drops job
+          # outputs whose values match a repository secret (`AZURE_TENANT_ID`)
           export DATABASE_FQDN="${{ needs.terraform.outputs.database_fqdn }}"
           export AKS_KV_IDENTITY_CLIENT_ID="${{ needs.terraform.outputs.aks_kv_identity_client_id }}"
           export KEY_VAULT_NAME="${{ needs.terraform.outputs.key_vault_name }}"
@@ -196,7 +220,7 @@ jobs:
           kubectl rollout status deployment/learningsteps-api --timeout=180s
 
   health-check:
-    name: Comfirm API is reachable
+    name: Confirm API is reachable
     runs-on: ubuntu-latest
     needs: [terraform, deploy]
     environment: production
@@ -206,19 +230,20 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Azure login
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      
+
       - name: Setup kubectl
         uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
 
       - name: AKS health-check
         run: |
+          # Re-authorize the health-check runner IP before querying service status
           RUNNER_IP=$(curl -s https://ifconfig.me)
           az aks update \
             --resource-group "${{ needs.terraform.outputs.resource_group_name }}" \
@@ -230,6 +255,7 @@ jobs:
             --name "${{ needs.terraform.outputs.aks_cluster_name }}" \
             --overwrite-existing
 
+          # Poll until Azure assigns a public LoadBalancer IP (up to 3 minutes)
           EXTERNAL_IP=""
           for i in $(seq 1 18); do
             EXTERNAL_IP=$(kubectl get svc learningsteps-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')

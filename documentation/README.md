@@ -16,8 +16,11 @@ Die Dokumentation ist chronologisch in die beiden Projekt-Meilensteine unterteil
 ## 2️⃣ Teil 2: LearningSteps Evolution (`evolution/`)
 *Cloud-Native Transformation mit Docker, Terraform, GitHub Actions (OIDC & DevSecOps) und Azure Kubernetes Service (AKS).*
 
-* **[evolution/README.md](evolution/README.md)** – Architektur- & Pipeline-Übersicht von Projekt 2
+* **[evolution/EVOLUTION_SUMMARY.md](evolution/EVOLUTION_SUMMARY.md)** – Offizielle Projektzusammenfassung (inkl. Architekturdiagramm, Success Criteria & Screenshot-Nachweisen)
+* **[evolution/EVOLUTION_JOURNAL.md](evolution/EVOLUTION_JOURNAL.md)** – Chronologische Step-by-Step-Verlaufsdokumentation & Troubleshooting-Log
+* **[evolution/README.md](evolution/README.md)** – Architektur-, Pipeline- & Dokumentationsübersicht von Projekt 2
 * **[evolution/ROADMAP.md](evolution/ROADMAP.md)** – Umsetzungsplan, Design-Entscheidungen & Abweichungen
-* **[evolution/notes/](evolution/notes/)** – Arbeitsnotizen
+* **[evolution/notes/](evolution/notes/)** – Detailnotizen zu den Etappen ([Step 1](evolution/notes/step_1_docker.md) bis [Step 5](evolution/notes/step_5_kubernetes.md))
+* **[evolution/images/](evolution/images/README.md)** – Screenshot-Checkliste und Ablageort für Azure-/GitHub-Nachweise
 * **[evolution/output/](evolution/output/)** – Gesammelte Scan- & Trivy-Logs
-* **[evolution/scripts/](evolution/scripts/)** – Hilfsskripte für Projekt 2
+* **[evolution/scripts/](evolution/scripts/)** – Bootstrap- und OIDC-Skripte für Projekt 2

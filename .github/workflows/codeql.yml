@@ -1,3 +1,8 @@
+# ==============================================================================
+# GitHub Advanced Security – Python CodeQL SAST Workflow
+# ==============================================================================
+# Managed CodeQL static analysis workflow scanning the Python application code.
+
 # For most projects, this workflow file will not need changing; you simply need
 # to commit it to your repository.
 #

@@ -1,4 +1,16 @@
-name: Scan terraform
+# ==============================================================================
+# DevSecOps Workflow – Trivy Security Scanning & SARIF Reporting
+# ==============================================================================
+# Runs four parallel security gates on `main` pushes/PRs (and manual dispatch):
+#   1. scan-terraform      – IaC static analysis on `infra-terraform/`
+#   2. scan-k8s-manifests  – Kubernetes manifest policy checks on `k8s-manifests/`
+#   3. scan-image          – Container image CVE scan (`ignore-unfixed: true`)
+#   4. scan-fs             – Repository-wide secret detection
+#
+# `limit-severities-for-sarif: true` is required so `exit-code: "1"` only fails
+# on `CRITICAL,HIGH` findings rather than failing on `MEDIUM`/`LOW` SARIF entries.
+
+name: Security Scan (Trivy)
 
 on:
   push:
@@ -38,10 +50,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sarif-reports
+          name: sarif-iac
           path: trivy-iac.sarif
-          
-  scan-t8n-manifest:
+
+  scan-k8s-manifests:
     runs-on: ubuntu-24.04
     permissions:
       contents: read # Required to checkout and read repo files
@@ -98,6 +110,7 @@ jobs:
           severity: "CRITICAL,HIGH"
           exit-code: "1"
           limit-severities-for-sarif: true
+          # Ignore upstream Debian/OS CVEs that do not yet have a vendor patch
           ignore-unfixed: true
 
       - name: Upload SARIF artifact
@@ -138,9 +151,10 @@ jobs:
           name: sarif-fs
           path: trivy-fs.sarif
 
+  # Consolidate all four scan artifacts and publish to GitHub Code Scanning
   upload-sarif-reports:
     runs-on: ubuntu-24.04
-    needs: [scan-terraform, scan-image, scan-fs]
+    needs: [scan-terraform, scan-k8s-manifests, scan-image, scan-fs]
     if: always()
     permissions:
       security-events: write
@@ -178,9 +192,9 @@ jobs:
           sarif_file: sarif-reports/trivy-fs.sarif
           category: secrets-fs
 
-      - name: Upload Secrets K8s
+      - name: Upload Kubernetes SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: sarif-reports/trivy-k8s.sarif
-          category: secrets-k8s
+          category: k8s-manifests
