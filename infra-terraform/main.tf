@@ -233,7 +233,7 @@ resource "azurerm_postgresql_flexible_server" "learningsteps_db" {
   administrator_login           = var.az_postgresql_user
   administrator_password        = azurerm_key_vault_secret.db_password.value
 
-  sku_name   = "B_Standard_B2s"
+  sku_name   = "GP_Standard_D2ds_v5"
   storage_mb = 32768
 
   depends_on = [azurerm_private_dns_zone_virtual_network_link.learningsteps_priv_dns_vn_link]
