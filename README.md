@@ -12,9 +12,11 @@ Dieses Repository dokumentiert den gesamten Entwicklungsweg der **LearningSteps*
 ├── 02_learningsteps_evolution.md    # Aufgabenstellung & Spezifikation: Projekt 2 (Evolution)
 ├── AGENTS.md                        # Leitfaden für KI-Agenten (Copilot- & Mentoren-Modus)
 ├── Dockerfile                       # Gehärtetes Multi-Step-Container-Image (Python 3.13-slim)
+├── generate_trivy_logs.sh           # Lokales Hilfsskript für Trivy-Security-Logs
 ├── .github/workflows/               # GitHub Actions CI/CD & DevSecOps-Pipelines
 │   ├── lint.yml                     # Ruff (Lint/Format) & Pytest Smoke-Test
-│   ├── trivy.yml                    # Trivy Security Scans (IaC, Image, K8s, Secrets -> SARIF)
+│   ├── trivy.yml                    # Trivy Security Scans (IaC, K8s, Image, Secrets -> SARIF)
+│   ├── codeql.yml                   # GitHub CodeQL SAST-Analyse für Python
 │   ├── tag.yml                      # Manuelles Release-Tagging (v*.*.*)
 │   ├── deploy.yml                   # OIDC Azure Login, Terraform, ACR Push, AKS Deploy & Health-Check
 │   └── destroy.yml                  # Manueller Infrastructure-Cleanup (mit Confirm-Guardrail)
@@ -23,7 +25,7 @@ Dieses Repository dokumentiert den gesamten Entwicklungsweg der **LearningSteps*
 ├── documentation/                   # Projektdokumentation, nach Meilensteinen getrennt
 │   ├── README.md                    # Zentrale Doku-Übersicht (Origin & Evolution)
 │   ├── origin/                      # Teil 1: Azure-CLI-Skripte, Executive Summary & Technical Writeup
-│   └── evolution/                   # Teil 2: Roadmap, Notizen, Scan-Outputs & Evolution-Doku
+│   └── evolution/                   # Teil 2: Summary, Verlaufsjournal, Roadmap, Notizen, Screenshots & Skripte
 └── learningsteps/                   # Quellcode der FastAPI-Anwendung & Tests
     ├── api/                         # FastAPI Endpunkte, Models, Repositories, Services
     ├── tests/                       # Pytest Smoke-Tests
@@ -43,16 +45,16 @@ Dieses Repository dokumentiert den gesamten Entwicklungsweg der **LearningSteps*
 * **Tier 2 (Private)**: Isolierter PostgreSQL-Server ohne Public IP, erreichbar nur via privatem VNet (`10.0.0.0/16`).
 * **Dokumentation & Skripte**: Siehe [`documentation/origin/`](documentation/origin/) ([Executive Summary](documentation/origin/ORIGIN_SUMMARY.md), [Technical Writeup](documentation/origin/TECHNICAL_WRITEUP.md) & Azure CLI Skripte).
 
-### 2. [Projekt 2: LearningSteps Evolution](02_learningsteps_evolution.md) (Aktiver Fokus 🔥)
+### 2. [Projekt 2: LearningSteps Evolution](02_learningsteps_evolution.md) (Steps 1–5 Abgeschlossen ✅)
 * **Ziel**: Transformation von skriptbasierter VM-Infrastruktur hin zu einem vollständig automatisierten, gehärteten Cloud-Native DevOps-Lebenszyklus.
 * **Umgesetzte Bausteine**:
   1. **Containerisierung**: Gehärtetes [`Dockerfile`](Dockerfile) (Non-Root `apiuser`, gepatchte OS-Pakete, Entfernung von `pip`/`setuptools`/`ensurepip` nach dem Build).
   2. **Infrastructure as Code (IaC)**: Deklarative Azure-Infrastruktur unter [`infra-terraform/`](infra-terraform/) (VNet, Subnetze, AKS mit CSI Secrets Provider, Flexible PostgreSQL, Key Vault, ACR & `AcrPull`-RBAC) mit Azure Storage Remote State.
-  3. **DevSecOps**: Automatisierte Scans in [`trivy.yml`](.github/workflows/trivy.yml) für Terraform, Container-Image, Kubernetes-Manifeste und Secrets (SARIF-Upload in GitHub Security) sowie Python-Qualität via [`lint.yml`](.github/workflows/lint.yml).
+  3. **DevSecOps**: Automatisierte Scans in [`trivy.yml`](.github/workflows/trivy.yml) (Terraform, K8s-Manifeste, Container-Image, Secrets → SARIF), Python-SAST via [`codeql.yml`](.github/workflows/codeql.yml) sowie Linting/Tests via [`lint.yml`](.github/workflows/lint.yml).
   4. **CI/CD & OIDC**: Passwortloser Azure-Login via OIDC, manuelles Release-Tagging ([`tag.yml`](.github/workflows/tag.yml)), automatisches Deployment ([`deploy.yml`](.github/workflows/deploy.yml)) und sicherer Cleanup ([`destroy.yml`](.github/workflows/destroy.yml)).
   5. **Container-Orchestrierung**: Manifeste unter [`k8s-manifests/`](k8s-manifests/) inkl. Pod/Container-`securityContext`, `ConfigMap`, Azure Key Vault `SecretProviderClass` und `HorizontalPodAutoscaler`.
-  6. *(Optional)* **Observability**: Prometheus-Metriken & Grafana-Dashboards.
-* **Dokumentation**: Siehe [`documentation/evolution/`](documentation/evolution/) ([Evolution-Übersicht](documentation/evolution/README.md) & [Roadmap](documentation/evolution/ROADMAP.md)).
+  6. *(Optional)* **Observability**: Prometheus-Metriken & Grafana-Dashboards (Ausblick Step 6).
+* **Dokumentation**: Siehe [`documentation/evolution/`](documentation/evolution/) ([Executive Summary](documentation/evolution/EVOLUTION_SUMMARY.md), [Verlaufsjournal](documentation/evolution/EVOLUTION_JOURNAL.md), [Evolution-Übersicht](documentation/evolution/README.md) & [Roadmap](documentation/evolution/ROADMAP.md)).
 
 ---
 
@@ -86,5 +88,5 @@ Die Anwendung im Unterordner [`learningsteps/`](learningsteps/) kann lokal gesta
    # oder: uvicorn api.main:app --reload --port 8000
 
    # Smoke-Test (ohne DB)
-   PYTHONPATH=api pytest tests/ -v
+   PYTHONPATH=api DATABASE_URL=postgresql://test:test@localhost:5432/testdb pytest tests/ -v
    ```

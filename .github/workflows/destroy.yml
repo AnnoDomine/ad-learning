@@ -1,3 +1,10 @@
+# ==============================================================================
+# Cleanup Workflow – Manual Infrastructure Teardown (Recovery & Cost Control)
+# ==============================================================================
+# Destroys the Terraform-managed Azure infrastructure and subsequently removes the
+# remote-state Resource Group. Protected by an explicit `confirm == 'DESTROY'`
+# guardrail to prevent accidental environment deletion.
+
 name: Destroy Infrastructure
 
 on:
@@ -17,6 +24,7 @@ jobs:
     name: "Destroy Infrastructure"
     runs-on: ubuntu-latest
     environment: production
+    # Guardrail: job refuses to run unless operator types "DESTROY" verbatim
     if: inputs.confirm == 'DESTROY'
     steps:
       - name: Checkout repository
@@ -24,7 +32,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Azure login
         uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
@@ -53,6 +61,7 @@ jobs:
           KV_NAME=$(terraform output -raw key_vault_name 2>/dev/null || true)
           RG_NAME=$(terraform output -raw resource_group_name 2>/dev/null || true)
 
+          # Authorize the runner IP on Key Vault so Terraform can read/purge keys & secrets
           if [ -n "$KV_NAME" ] && [ -n "$RG_NAME" ]; then
             az keyvault network-rule add \
               --name "$KV_NAME" \
@@ -64,6 +73,8 @@ jobs:
 
           terraform destroy -auto-approve
 
+      # Delete the separate tfstate Resource Group only after Terraform teardown succeeds
+      # so recovery remains possible if `terraform destroy` encounters a partial error
       - name: Destroy RG of tfstate
         if: steps.destroy_tf_aks.outcome == 'success'
         env:

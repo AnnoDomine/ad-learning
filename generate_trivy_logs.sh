@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# ==============================================================================
+# Local Security Audit Helper – Generate Trivy Scan Logs
+# ==============================================================================
+# Executes local Trivy scans for Terraform IaC (`infra-terraform/`), the
+# container image (`learningsteps:v0.1.0`), and filesystem secrets, saving raw
+# reports under `output/trivy/` and archiving them into `documentation/evolution/`.
 
+set -euo pipefail
 
 echo "|-------------------------------------------------------------|"
 echo "|     Generating TRIVY logs into 'output/trivy/<type>.log'    |"
@@ -9,30 +15,29 @@ echo "|                                                             |"
 echo "| - Check if 'trivy' is installed:                            |"
 echo "|      > which trivy                                          |"
 
-# If trivy not installed, exit code 1 with info please visit [https://trivy.dev/docs/latest/getting-started/installation/]
-
- if ! command -v trivy >/dev/null 2>&1; then
-    echo "|                                                             |"
-    echo "| ERROR: 'trivy' not installed, please visite:                |"
-    echo "| https://trivy.dev/docs/latest/getting-started/installation/ |"
-    echo "|                                                             |"
-    echo "|-------------------------------------------------------------|"
-    echo "|------------------------  EXIT  -----------------------------|"
-    echo "|-------------------------------------------------------------|"
-    exit 1
+# Abort with installation instructions if Trivy CLI is missing
+if ! command -v trivy >/dev/null 2>&1; then
+  echo "|                                                             |"
+  echo "| ERROR: 'trivy' not installed, please visit:                 |"
+  echo "| https://trivy.dev/docs/latest/getting-started/installation/ |"
+  echo "|                                                             |"
+  echo "|-------------------------------------------------------------|"
+  echo "|------------------------  EXIT  -----------------------------|"
+  echo "|-------------------------------------------------------------|"
+  exit 1
 fi
 
-echo "| 'trivis installed - Running scans                           |"
+echo "| 'trivy is installed - Running scans                         |"
 echo "|                                                             |"
 echo "|-------------------------------------------------------------|"
 echo "|                                                             |"
-echo "| - Check if output folder exist and create if not:           |"
+echo "| - Check if output folder exists and create if not:          |"
 
-# Generate folder
+# Ensure output directories exist before piping with `tee`
 mkdir -p ./output
 mkdir -p ./output/trivy
 
-echo "| - Folders exists.                                           |"
+echo "| - Folders exist.                                            |"
 echo "| - Starting 'TERRAFORM' scans                                |"
 
 trivy config infra-terraform/ | tee output/trivy/terraform.log

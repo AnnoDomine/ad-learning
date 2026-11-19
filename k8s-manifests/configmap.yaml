@@ -1,3 +1,10 @@
+# ==============================================================================
+# ConfigMap – Non-Sensitive Database Connection Settings
+# ==============================================================================
+# Provides PostgreSQL host, database name, and user to the FastAPI pods.
+# `${DATABASE_FQDN}` is dynamically substituted via `envsubst` in `deploy.yml`
+# from Terraform outputs prior to `kubectl apply`.
+
 apiVersion: v1
 kind: ConfigMap
 metadata:

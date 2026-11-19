@@ -1,2 +1,7 @@
+# ==============================================================================
+# Ruff Configuration – LearningSteps API
+# ==============================================================================
+
 [lint]
+# FastAPI intentionally uses `Depends(...)` function calls inside endpoint parameter defaults
 ignore = ["B008"]
