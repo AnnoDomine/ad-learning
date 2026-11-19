@@ -5,6 +5,7 @@ Die Dokumentation ist chronologisch in die beiden Projekt-Meilensteine unterteil
 ---
 
 ## 1️⃣ Teil 1: LearningSteps Origin (`origin/`)
+
 *Klassische 2-Tier-Architektur auf Azure Virtual Machines (VM, Nginx/WAF, privates PostgreSQL-VNet, Azure CLI).*
 
 * **[ORIGIN_SUMMARY.md](origin/ORIGIN_SUMMARY.md)** – Executive Summary & Projektergebnisse
@@ -14,6 +15,7 @@ Die Dokumentation ist chronologisch in die beiden Projekt-Meilensteine unterteil
 ---
 
 ## 2️⃣ Teil 2: LearningSteps Evolution (`evolution/`)
+
 *Cloud-Native Transformation mit Docker, Terraform, GitHub Actions (OIDC & DevSecOps) und Azure Kubernetes Service (AKS).*
 
 * **[evolution/EVOLUTION_SUMMARY.md](evolution/EVOLUTION_SUMMARY.md)** – Offizielle Projektzusammenfassung (inkl. Architekturdiagramm, Success Criteria & Screenshot-Nachweisen)

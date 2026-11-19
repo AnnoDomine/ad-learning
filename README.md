@@ -40,12 +40,14 @@ Dieses Repository dokumentiert den gesamten Entwicklungsweg der **LearningSteps*
 ## 🚀 Die zwei Meilensteine
 
 ### 1. [Projekt 1: LearningSteps Origin](01_learningsteps_origin.md) (Abgeschlossen ✅)
+
 * **Ziel**: Errichtung einer sicheren 2-Tier-Architektur auf Azure Virtual Machines.
 * **Tier 1 (Public)**: FastAPI Applikationsserver mit UFW, Nginx-Reverse Proxy und ModSecurity WAF.
 * **Tier 2 (Private)**: Isolierter PostgreSQL-Server ohne Public IP, erreichbar nur via privatem VNet (`10.0.0.0/16`).
 * **Dokumentation & Skripte**: Siehe [`documentation/origin/`](documentation/origin/) ([Executive Summary](documentation/origin/ORIGIN_SUMMARY.md), [Technical Writeup](documentation/origin/TECHNICAL_WRITEUP.md) & Azure CLI Skripte).
 
 ### 2. [Projekt 2: LearningSteps Evolution](02_learningsteps_evolution.md) (Steps 1–5 Abgeschlossen ✅)
+
 * **Ziel**: Transformation von skriptbasierter VM-Infrastruktur hin zu einem vollständig automatisierten, gehärteten Cloud-Native DevOps-Lebenszyklus.
 * **Umgesetzte Bausteine**:
   1. **Containerisierung**: Gehärtetes [`Dockerfile`](Dockerfile) (Non-Root `apiuser`, gepatchte OS-Pakete, Entfernung von `pip`/`setuptools`/`ensurepip` nach dem Build).
@@ -63,6 +65,7 @@ Dieses Repository dokumentiert den gesamten Entwicklungsweg der **LearningSteps*
 Die Anwendung im Unterordner [`learningsteps/`](learningsteps/) kann lokal gestartet und getestet werden:
 
 1. **Python Virtual Environment anlegen**:
+
    ```bash
    cd learningsteps
    python3 -m venv venv
@@ -72,9 +75,11 @@ Die Anwendung im Unterordner [`learningsteps/`](learningsteps/) kann lokal gesta
 
 2. **Umgebungsvariablen konfigurieren (`.env`)**:
    Vorlage `.env-sample` nach `.env` kopieren und eigene Secrets definieren:
+
    ```bash
    cp .env-sample .env
    ```
+
    ```env
    POSTGRES_USER=<YOUR_POSTGRES_USER>
    POSTGRES_PASSWORD=<YOUR_POSTGRES_PASSWORD>
@@ -83,6 +88,7 @@ Die Anwendung im Unterordner [`learningsteps/`](learningsteps/) kann lokal gesta
    ```
 
 3. **API starten & Smoke-Test ausführen**:
+
    ```bash
    ./start.sh
    # oder: uvicorn api.main:app --reload --port 8000
